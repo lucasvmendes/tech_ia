@@ -12,8 +12,10 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import classification_report, accuracy_score
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
+from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 EXECUTAR_TRATAMENTO_OUTLIERS = True
 
@@ -301,12 +303,36 @@ print(f"Shape do DataFrame Limpo outliers tratados: {df.shape}")
 
 # Nova passada
 # Plotar novamente os Boxplots após o tratamento de outliers
-# --- INSERÇÃO DA CHAMADA DA NOVA FUNÇÃO ---
+# CHAMADA DA NOVA FUNÇÃO ---
 colunas_para_boxplot = ['Pregnancies', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age']
 gerar_boxplots(df, colunas_para_boxplot, "boxplots_outliers_apos_imputacao_apos_tratamento_outliers.png")
-# --- FIM DA INSERÇÃO ---
+# --- FIM DA CHAMADA ---
 
-### >>>>> estou aqui
+
+### Avalianto e plotando a coorelação entre as features
+# GRÁFICO HEATMAP
+print("\nGráfico de Correlação (Heatmap) das Features:")
+
+# Calcular a matriz de correlação
+correlation_matrix = df.corr()
+
+# Configurar o plot
+plt.figure(figsize=(10, 8))
+# Usar seaborn para o heatmap
+sns.heatmap(correlation_matrix, 
+            annot=True, # Mostrar os valores de correlação na célula
+            fmt=".2f", # Formato de duas casas decimais
+            cmap='coolwarm', # Mapa de cores
+            linewidths=.5, # Linhas entre as células
+            cbar_kws={'label': 'Coeficiente de Correlação'})
+
+plt.title('Heatmap de Correlação das Features do Dataset Diabetes', fontsize=16)
+correlation_filename = 'correlation_heatmap.png'
+plt.savefig(correlation_filename)
+plt.close()
+print(f"Heatmap de correlação salvo como {correlation_filename}")
+## ---------------------------------------------------------------------
+
 
 '''
 Avaliar a escala dos dados
@@ -319,12 +345,13 @@ colunas_dataset = ['Pregnancies','Glucose','BloodPressure','SkinThickness','Insu
 
 for coluna in colunas_dataset:
     if coluna in df.columns:
-        # Criar o gráfico de boxplot
-        print('fImprimindo boxplot para a coluna:', coluna)
-        plt.boxplot(df[coluna])
-        plt.title(coluna)
-        plt.ylabel('Valores')
-        plt.show()
+        # # Criar o gráfico de boxplot
+        # print(f'Imprimindo boxplot para a coluna:', coluna)
+        # plt.boxplot(df[coluna])
+        # plt.title(coluna)
+        # plt.ylabel('Valores')
+        # plt.show()
+
         # Exibir estatísticas descritivas
         print(df[coluna].describe())    
 
@@ -392,6 +419,8 @@ model.fit(X_train_scaled, y_train)
 
 print("\nModelo de Regressão Logística treinado com sucesso!")
 
+### >>>>> estou aqui
+
 '''
 5. Avaliação do Modelo
 Avaliamos o desempenho do modelo no conjunto de teste.
@@ -429,3 +458,50 @@ Magnitude: Quanto maior o valor absoluto do coeficiente, maior é a importância
 '''
 
 # %%
+
+## Aplicando a Matriz grafica de confusão
+
+# 3. Geração e Visualização da Matriz de Confusão
+# Calculando a Matriz de Confusão
+cm = confusion_matrix(y_test, y_pred)
+
+print("\n--- Matriz de Confusão ---")
+print(cm)
+'''
+Interpretação da Matriz de Confusão (CM):
+[TN FP]
+[FN VP]
+
+Onde:
+TN (Verdadeiro Negativo): Casos corretamente previstos como NÃO Diabetes (0).
+FP (Falso Positivo): Casos incorretamente previstos como Diabetes (1) - Erro Tipo I.
+FN (Falso Negativo): Casos incorretamente previstos como NÃO Diabetes (0) - Erro Tipo II.
+VP (Verdadeiro Positivo): Casos corretamente previstos como Diabetes (1).
+'''
+
+# 4. Plotagem da Matriz de Confusão (Gerando o Gráfico)
+plt.figure(figsize=(8, 6))
+# Usando seaborn.heatmap para uma visualização clara
+sns.heatmap(cm, 
+            annot=True,          # Mostrar os valores na célula
+            fmt="d",             # Formato decimal (números inteiros)
+            cmap="Blues",        # Mapa de cores
+            cbar=False,          # Não mostrar a barra de cores
+            linecolor='black',   # Cor das linhas de separação
+            linewidths=0.5,      # Largura das linhas de separação
+            xticklabels=['Não Diabetes (0)', 'Diabetes (1)'], # Rótulos do eixo X (Previsto)
+            yticklabels=['Não Diabetes (0)', 'Diabetes (1)']  # Rótulos do eixo Y (Real)
+            )
+
+plt.title('Matriz de Confusão da Regressão Logística')
+plt.xlabel('Valor Previsto')
+plt.ylabel('Valor Real')
+
+# Salvar a imagem do gráfico da Matriz de Confusão
+confusion_matrix_filename = 'confusion_matrix_logistic_regression.png'
+plt.savefig(confusion_matrix_filename)
+plt.close() # Fecha a figura para liberar memória
+
+print(f"\nGráfico da Matriz de Confusão salvo como {confusion_matrix_filename}")
+
+# %% FIM DO CÓDIGO
